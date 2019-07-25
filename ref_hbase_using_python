@@ -1,0 +1,40 @@
+Using Python
+
+
+
+--------------
+Happybase
+--------------
+HappyBase is a developer-friendly Python library to interact with Apache HBase. HappyBase is designed for use in standard HBase setups, and offers application developers a Pythonic API to interact with HBase. Below the surface, HappyBase uses the Python Thrift library to connect to HBase using its Thrift gateway, which is included in the standard HBase 0.9x releases.
+http://happybase.readthedocs.io/en/latest/index.html
+
+
+There are 4 happybase APIs
+a. Connection: It connects to the HBase Thrift server and provides methods for table management.
+b. Table: This class offers methods for data retrieval and data manipulation. Instances of this class can be obtained using the Connection.table() method.
+c. Batch: The Batch class implements the batch API for data manipulation, and is available through the Table.batch() method.
+d. ConnectionPool: The ConnectionPool class implements a thread-safe connection pool that allows an application to (re)use multiple connections.
+
+Example:
+--------
+import happybase
+
+connection = happybase.Connection('hostname')
+table = connection.table('table-name')
+
+table.put(b'row-key', {b'family:qual1': b'value1',
+                       b'family:qual2': b'value2'})
+
+row = table.row(b'row-key')
+print(row[b'family:qual1'])  # prints 'value1'
+
+for key, data in table.rows([b'row-key-1', b'row-key-2']):
+    print(key, data)  # prints row key and data for each row
+
+for key, data in table.scan(row_prefix=b'row'):
+    print(key, data)  # prints 'value1' and 'value2'
+
+row = table.delete(b'row-key')
+--------------
+Python
+----------------
