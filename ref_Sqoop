@@ -1,0 +1,82 @@
+Apache Sqoop(TM) is a tool designed for efficiently transferring bulk data between Apache Hadoop and structured datastores such as relational databases.
+
+Latest stable release is 1.4.6
+Latest cut of Sqoop2 is 1.99.6
+
+Moving from Sqoop 1 to Sqoop 2: Sqoop 2 is essentially the future of the Apache Sqoop project. However, since Sqoop 2 currently lacks some of the features of Sqoop 1, Cloudera recommends you use Sqoop 2 only if it contains all the features required for your use case; otherwise, continue to use Sqoop 1.
+
+
+
+source(source)  -> sync (Target)
+
+Sqoop   - Sqoop verson 1
+Sqoop 2 - Sqoop verson 2
+
+
+------------Property
+
+There is no sqoop-site.xml, instead it uses sqoop.properties like pig
+
+
+
+-------------
+Sqoop import:
+1. sqoop import is to get data from conventional databases and Nosql/document based databases into Hadoop eco system
+2. Execution steps (connect to db twice)
+	a. Generates custom DBwritable class reading metadata of table
+	b. Connect to database - default 4 concurrent connections
+	c. Read and split the data using custom DB writable class
+	d. Load data into HDFS
+
+Sqoop export:
+1. Sqoop export is to get data out of hadoop based systems into conventional databases/NoSql data stores.
+2. It also uses Map/Reduce framework
+3. At this time it only understands HDFS directories not hive tables (HCatalog)
+4. It also splits data (but uses HDFS splittable logic)
+
+3. Split logic: Algoritham is same for both sqoop and sqoop 2
+	a. Uses primary key or unique key
+	b. Get minimum and maximum value
+	c. Compute ranges based on number of map tasks (default 4)
+	d. Process mutally exclusive data in parallel
+	e. without primary/unique keys import process only uses one map tasks
+
+
+
+
+--------------
+Sqoop:
+------
+1. Primarily it uses Map Only job to move data between RDBMS and HDFS. 
+2. Command Line (Only)
+3. Not secure: Need to provide uid & pwd while import. so any body who has access to node will know the uid & pwd.
+4. No client-server: if one have access to sqoop command, he will have access to all JDBC jars.
+
+1. Sqoop is a map reduce based tool that can be used to copy data from relation databases to Hadoop and vice versa
+2. Written in java and open source
+3. Uses JDBC for DB Connectivity
+4. Uses Map Reduce framework
+
+
+Sqoop 2:
+-------
+1. Client/server architecture
+2. Sqoop 2 uses both Map and Reduce
+3. Highly secure: Client interface will connect to Hadoop using intermediate connector.
+4. 
+
+------
+
+Sqoop import: Importing to HDFS directory. Direcotry should not already exists
+
+# Some times we need to provide port no in "jdbc:mysql://localhost/cards"
+
+sqoop import -- Connect "jdbc:mysql://localhost/cards" \
+	--username deck \
+	--password hadoop \
+	--table small_deck \
+	-- target-dir /user/cloudera/cards/small_deck_import/ \
+	--input-fields-terminated by '|' \
+	--input-lines-terminated-by '\n' \
+	-num-mappers 1 \
+	--outdir java_files
