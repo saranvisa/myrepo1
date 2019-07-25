@@ -1,0 +1,93 @@
+
+http://www.cloudera.com/documentation/enterprise/latest/topics/how_to_configure_cm_tls.html
+----------------------------------------
+** Important terms, path, etc
+a. TLS : Transport Layer Security
+b. JAVA_HOME
+	export JAVA_HOME=/usr/java/jdk1.8.0_141-cloudera
+c. Keytool: It is a utility to generate "Java keystore(JKS)" and "certificate signing request (CSR)"
+	JAVA_HOME/bin/keytool
+d. Server: Two files needs to be generated and the corresponding passwords to be maintained and updated in Cloudera Manager
+	a. CM TLS/SSL Server JKS "Keystore" File location: "ex: /etc/cloudera-scm-server/cm_keystore.jks"
+	b. CM TLS/SSL Certificate "Trust Store" File: "ex: /etc/cloudera-scm-server/trusted.jks"
+e. Agent & server: On each agent host (including the Cloudera Manager Server host, which also has an agent), open the /etc/cloudera-scm-agent/config.ini configuration file and set the use_tls parameter in the [Security] section as follows: 
+	use_tls=1
+	verify_cert_file=/opt/cloudera/security/pki/rootca.pem  ## Enable Server Certificate Verification on Cloudera Manager Agents
+
+f. 
+----------------------------------------
+** Things to note
+
+1. When enabling TLS for the Cloudera Manager Server admin interface, you must set the Java truststore location and password in the Cloudera Management Services configuration. Otherwise, roles such as Host Monitor and Service Monitor cannot connect to Cloudera Manager Server and will not start
+
+-----------------------------------------
+
+1. What is TLS? Diff between TLS and SSL?
+	Transport Layer Security (TLS) is the successor to SSL. Secure Sockets Layer (SSL) is a cryptographic protocol that enables secure communications over the Internet. 
+
+	SSL and TLS are both cryptographic protocols that provide authentication and data encryption between servers, machines and applications operating over a network (e.g. a client connecting to a web server). SSL is the predecessor to TLS.
+
+
+2. Why do we need TLS?
+	When you configure authentication and authorization on a cluster, Cloudera Manager Server sends sensitive information over the network to cluster hosts, such as Kerberos keytabs and configuration files that contain passwords. To secure this transfer, you must configure TLS encryption between Cloudera Manager Server and all cluster hosts.
+
+	TLS encryption is also used to secure client connections to the Cloudera Manager Admin Interface, using HTTPS.
+
+	Cloudera Manager also supports TLS authentication. Without certificate authentication, a malicious user can add a host to Cloudera Manager by installing the Cloudera Manager Agent software and configuring it to communicate with Cloudera Manager Server. To prevent this, you must install certificates on each agent host and configure Cloudera Manager Server to trust those certificates.
+
+3. What is Keytool utility?
+
+	Use the keytool utility to generate a "Java keystore(JKS)" and "certificate signing request (CSR)". Replace the OU, O, L, ST, and C entries with the values for your environment. When prompted, use the same password for the keystore password and key password. Cloudera Manager does not support using different passwords for the key and keystore.
+	
+	$JAVA_HOME/bin/keytool -genkeypair -alias $(hostname -f) -keyalg RSA -keystore /opt/cloudera/security/pki/$(hostname -f).jks -keysize 2048 -dname "CN=$(hostname -f),OU=Engineering,O=Cloudera,L=Palo Alto,ST=California,C=US" -ext san=dns:$(hostname -f)
+
+	$JAVA_HOME/bin/keytool -certreq -alias $(hostname -f) -keystore /opt/cloudera/security/pki/$(hostname -f).jks -file /opt/cloudera/security/pki/$(hostname -f).csr -ext san=dns:$(hostname -f)
+
+	Copy the JDK cacerts file to jssecacerts as follows:
+	sudo cp $JAVA_HOME/jre/lib/security/cacerts $JAVA_HOME/jre/lib/security/jssecacerts
+
+	Note: The default password for the cacerts file is changeit. The same applies to the jssecacerts file if you copied it from the cacerts before changing the 	password. Cloudera recommends changing these passwords by running the following commands:
+
+	$JAVA_HOME/bin/keytool -storepasswd -keystore $JAVA_HOME/jre/lib/security/cacerts
+	$JAVA_HOME/bin/keytool -storepasswd -keystore $JAVA_HOME/jre/lib/security/jssecacerts
+
+4. Configuring TLS Encryption for Cloudera Manager
+	
+	4.1. Generate TLS Certificates
+	4.2. Configure TLS for the Cloudera Manager Admin Console
+	4.3. Configure TLS for Cloudera Manager Agents
+	4.4. Enable Server Certificate Verification on Cloudera Manager Agents
+	4.5. Configure Agent Certificate Authentication
+
+5. Configure TLS for the Cloudera Manager Admin Console
+	Step 1: Enable HTTPS for the Cloudera Manager Admin Console
+	Step 2: Specify SSL Truststore Properties for Cloudera Management Services
+	Step 3: Restart Cloudera Manager and Services
+
+6. Configure TLS for Cloudera Manager Agents
+	Step 1: Enable TLS Encryption for Agents in Cloudera Manager
+	Step 2: Enable TLS on Cloudera Manager Agent Hosts
+	Step 3: Restart Cloudera Manager Server and Agents
+	Step 4: Verify that the Cloudera Manager Server and Agents are Communicating
+
+7. Enable Server Certificate Verification on Cloudera Manager Agents
+	a. On each agent host (including the Cloudera Manager Server host, which also has an agent), open the /etc/cloudera-scm-agent/config.ini configuration file and set the use_tls parameter in the [Security] section as follows:
+use_tls=1
+
+	b. On each agent host (including the Cloudera Manager Server host), open the /etc/cloudera-scm-agent/config.ini configuration file, and then uncomment and set the following property:
+verify_cert_file=/opt/cloudera/security/pki/rootca.pem
+
+Alternatively, you can edit the config.ini file on one host, and then copy it to the other hosts because this file by default does not contain host-specific information. If you have modified properties such as listening_hostname or listening_ip address in config.ini, you must edit the file individually on each host.
+
+
+8. Configure Agent Certificate Authentication
+	Without certificate authentication, a malicious user can add a host to Cloudera Manager by installing the Cloudera Manager agent software and configuring it to communicate with Cloudera Manager Server. To prevent this, you must configure Cloudera Manager to trust the agent certificates.
+
+	Step 1: Export the Private Key to a File
+	Step 2: Create a Password File
+	Step 3: Configure the Agent to Use Private Keys and Certificates
+	Step 4: Enable Agent Certificate Authentication
+	Step 5: Restart Cloudera Manager Server and Agents
+	Step 6: Verify that Cloudera Manager Server and Agents are Communicating
+
+
