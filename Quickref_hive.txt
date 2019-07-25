@@ -1,0 +1,290 @@
+No web UI for Hive till Cloudera 5.2.8 and apache 2.2 version… 
+
+Hive table is nothing but a logical structure and logical structure will be stored in hive metastore. It will not store any physical data , the physical data will be stored in HDFS. The data will not be loaded into hive table. Hive table just refers the location in hdfs for processing. 
+
+# Hive Metastore: has table strucute.
+When you run a query. Query will be compiled in metastore and get data from HDFS.
+When you run a query. First Hive metastore comes in picture and compile the query and get data from HDFS.
+
+# Driver: (compiles, optimizes, executes)
+When you run a query (other than LOAD). Driver is capable of using the information from metastore and generate the MapReduce code and compiles, optimize and execute the 'job' in YARN Resource Manager. 
+
+Note: SELECT * FROM TABLE; -- Will not generate MapReduce but SELECT col1, col2 FROM TABLE will generate MapReduce
+
+
+#To check the hdfs path for a particular table
+>use db;
+>describe formatted tablename;
+it will show the location where the table data stored in HDFS
+Ex: hdfs://nameservice1/user/hive/warehouse/cards.db/large_deck
+
+# Create table structure is metadata and it will be stored in MySQL.
+# Load/Insert and Metadata stores in different location. 
+# Here Load/Insert stores in HDFS but Metadata stores in MySQL.
+
+-------------
+Is it possible to create hive external table location referring to AWS S3?
+
+Yes, specify the S3 location as follows:
+
+Create external table tbl_name
+ LOCATION  ‘s3://s3_bucketname/foldername’
+
+--------
+
+# Admin work for Hive user defined functions
+#update .hiverc file to purge the user defined function 
+a. Adding jar files
+b. Creating temporary function
+c. Updating .hiverc file
+d. Supporting development team
+----------
+
+Hive is a data warehouse system that offers a SQL like called HiveQL
+
+1. Without knowledge of metadata it is dificult to execute the query
+2. Hive is completly logical and logical data will be stored in metastore. Hive can have strure on top of DFS
+3. Actual data will be in DFS, hive will not store any data
+	a. All the data physically stored in HDFS
+	b. MapReduce: Data is processed using map reduce jobs
+	c. Metastore: stores structure of tables
+	d. Hive query engine: Generates java code at run time
+	e. Hive query engine: Compiles and build jar at run time
+	f. Hive query engine: Submit as one or more map reduce jobs
+4. CLI - command line interface
+5. HWI - Hive Web Interface
+6. Thrift Server - Non Java based lanaguages which uses https to communicate with Hive
+7. JDBC and ODBC are connectivity
+8. Hue will interact with Hive
+9. Karmasphere and Qubole is on top of hive
+
+--------------
+Property
+1. Hive-site.xml
+2. <name>hive.metastore.warehouse.dir</name> <value>/user/hive/warehouse</value>
+3. <name>hive.zookeeper.quorum</name><value>nodes</value>
+4. <name>hive.zookeeper.client.port</name><value>2181</value>
+
+# Hive will determine how many reducer to be used for any given query. 
+5. <name>mapred.reduce.tasks</name><value>-1</value>
+
+# To determine what is MapReduce job is doing while running Hive QL
+# This is very important to trouble shoot some issues. Especially when more than one Mappers involved
+6. <name>mapreduce.input.fileinputformat.inputdir</name><value>?</value>
+
+--------------- make sure all the changes are done on specific user -or- from home directory
+#Before login to hive. set parameter file
+#apart from xml file, We can also  overwrite some parameter;
+#1. set command and .hiverc
+
+#just for testing login to hive and see the the commands using set
+>hive;  -- To login to hive
+>set;   -- Will give all the parameter
+>set mapred.reduce.tasks;   -- To see a particular parameter
+> set mapred*;              -- To see the command with whiled card. To be verified
+>set mapred.recue.tasks=1;  -- To overwrite the value of particular parameter. But it is temporary
+
+# The temporary change is needed to check the performance during run time
+
+#To permanenetly change values of parameters for a ** "given user"** who runs hive commands
+>exit; -- to logout from hive
+>vi ~/.hiverc   (or) vi .hiverc
+set mapred.recue.tasks=1;
+# If default block size if 128 MB then MapReduce will use 128 mb. But Hive will use 256 MB based on below parameter. Setting this to 1GB may increaes the performance
+set mapreduce.input.fileinputformat.split.maxsize=256000000; 
+set mapreduce.input.fileinputformat.split.minsize=1;
+set mapreduce.input.fileinputformat.split.minsize.pernode=1;
+set mapreduce.input.fileinputformat.split.minsize.perrack=1;
+>hive; -- to login hive again
+>set mapred.reduce.tasks;   -- To see a particular parameter. it will show 1 instead of -1
+
+# but the above command will change for only given user
+> sudo su -root; and try the above command it will not reflected
+
+# The above parameter set done for just testing.. so remove it
+>vi ~/.hiverc   (or) vi .hiverc
+remove the parameter
+
+
+--------------------- To trouble shoot
+#1. Hive logfile. hduser is the username
+cd /tmp/hduser/hive.log
+
+
+#2. Check MapReduce log
+
+------------------------
+# 1. Hive command line (without login to hive)
+>hive -e; -- without login to hive
+Ex:>hive -e "show functions;"
+
+
+Ex:>hive -e "set" | grep split ; -- To filter using grep
+---------------------
+# 2. Hive command line (without login to hive)
+# To create script with multiple commands 
+# Also scheudle the script in crown??
+>hive -f
+Ex:> vi hive_test_f.hql
+show functions;
+-- also give multiple hive commands and come out of vi editor
+> hive -f hive_test_f.hql
+-------------------------
+# 3. Hive command line (without login to hive)
+# To get the configuration of a parameter without login to hive
+>hive -hiveconf mapred.reduce.tasks;
+
+---------------------------
+# HOw to run the hive 
+
+>hive filename.hql
+------------------
+
+#go to user(hduser) before enter hive. 
+#Login to hive:
+
+#1. >hive; -- to login
+>show database;
+>show functions;  -- default functions
+#hive API used to create user defined function.
+
+---------------------DB is a directory in HDFS
+#2. Create database, default vs. user databases
+# Crete database
+create database if not exists cards;
+
+# dfs is an alisas name for hadoop fs in hive
+# To check what happend after database creation in HDFS
+>dfs  -ls /user/hive/warehouse;
+
+you will see 'directory' cards.db
+
+# Switch to database
+>use cards;
+
+---------------Datatype : string, int, float, double, no date
+---------------Stored as: TEXTFILE, sequencefile, rcfile
+
+CREATE [TEMPORARY] [EXTERNAL] TABLE [IF NOT EXISTS] [db_name.] table_name
+
+[(col_name data_type [COMMENT col_comment], ...)]
+[COMMENT table_comment]
+[ROW FORMAT row_format]
+[STORED AS file_format]
+
+
+# 3. Create hive tables
+# Every table will create new directory in HDFS
+Create table large_deck (
+COLOR string,
+SUITS string,
+PIP string)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
+STORED AS TEXTFILE;
+
+
+# Table large_deck will also be a directory
+# It is a logical structure in HDFS  ************
+>dfs  -ls /user/hive/warehouse/cards.db;
+>dfs  -ls /user/hive/warehouse/cards.db/large_deck; -- is empty as no data copied
+
+
+>describe large_deck;
+>describe extended large_deck;  -- To get more details unreadable format  
+>describe formatted latge_deck; -- more details readble format
+
+#formatted large_deck will show more details including 'Storage Information'
+# 'Storage information' is required becuase sometime if we dump data into hive using load it won't show any issue. But show isue while query it.
+# 'storage information' varies based on data type you are using and based on stored as textfile/sequencefile/rcfile
+
+Ex:
+InputFormat : org.apache.hadoop.mapred.TextInputFormat
+OutputFormat: org.apache.hadoop.hive.ql.io.hiveIgnorekeyTextOutputFormat\
+
+
+---------- Two types of Hive tables: Managed_table and External_Table
+
+-------------------LoAD data
+
+# Load Data -- will not run any MapReduce behind the scene, just dump the data into HDFS
+# it will work like put command to Copying data to HDFS via Hive tables
+
+# Pre-request: Make sure you are in right DB using. By default it will load data into default
+# large_deck will be stored as file not direcory
+
+>show databases;
+>use dbname; -- ex: use cards;
+# To move data from local to HDFS
+>LOAD DATA LOCAL INPATH '/home/hduser/data/cards/largedeck.txt' INTO TABLE large_deck;
+
+# To move data from a different path in HDFS to large_deck. Then data from that path will be 'moved'(not copied) to table path directory
+>LOAD DATA COLLECT INPATH '/hdfspath/largedeck.txt' INTO TABLE large_deck;
+
+>dfs -ls /user/hive/warehouse/cards.db/large_deck;
+
+# it will work like put command to Copying data to HDFS via Hive tables
+# In addition to that it may do some internal process... this is just for reference, don't try
+>hadoop fs -put /localpath   /user/hive/warehouse/cards.db/large_deck
+
+---------------- select data
+
+>select * from large_deck limit 100;
+
+---------------- Insert Data
+# 1. Difference between load data and insert data
+# Load Data: Copy data from local to HDFS. It works like put command to move data from local to HDFS
+# Insert data: It will generate MapReduce job. It will also copy data to HDFS with MapReduce job.
+
+
+>create table deck_of_cards_pby_pip (
+COLOR string,
+SUIT string)
+PARTITIONED BY (PIP string)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
+STORED AS TEXTFILE;
+
+# Table Partition is possible in hive
+
+
+# Pre-request for partition insert (dynamic.partition.mode)
+>set hive.exec.dynamic.partition.mode=nonstrict;
+
+
+# 2. Difference between hive Insert and RDBMS insert
+# RDBMS Insert: Insert individual values.
+Ex: insert into table_name(c1,c2) value ('a','b');
+# hive Insert : Can't insert individual value. Only insert output of a query.
+# The above insert is not possible in hive, only output of one query will be inserted into one table.
+>INSERT OVERWRITE TABLE deck_of_cards_pby_pip PARTITION (pip) SELECT * FROM large_deck;
+
+# It will create more sub directory based on value in PIP as it has partition by.
+
+
+-------------- Drop the table
+> drop table tablename;
+
+
+---------------- User defined function
+
+#hive API used to create user defined function.
+#Get Jar file and Classname from Developer. Ex: lca.lca_to_date is the java class name for hive UDF
+
+#To make it consistent to all the jobs triggered by the user. you need to update .hiverc file
+>add jar /home/hduser/demo/hive/lca_hive.jar;
+
+>Create temporary function lca_to_date as 'lca.lca_to_date';
+
+Now developer can use function.
+
+#To make it consistent to all the jobs triggered by the user. you need to update .hiverc file
+> vi .hiverc
+use the function name
+
+Get the steps from developer to understand how to validate. so that you can validate and deliver to developer
+
+------ Running sample query -- is pending 1:28 th minute
+
+
+
+
+
