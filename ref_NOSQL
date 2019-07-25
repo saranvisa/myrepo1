@@ -1,0 +1,211 @@
+NoSQL -  Not Only SQL
+
+The data structures used by NoSQL databases (e.g. key-value, graph, or document) differ from those used in relational databases, making some operations faster in NoSQL and some faster in relational databases.
+
+1. NoSQL is focus to provide
+	a. Scalability - handle large amount of data
+	d. Performance -
+	c. High Availability - (In terms of hardware failure)
+
+2. Diff between RDBMS vs NoSQL
+	a. RDBMS - can handle only Structured data
+	b. NoSQL - can handle both Structured and Unstructured data
+
+3. What are the list of UnStructured data?
+	No specific format
+	a. Video File
+	b. Audio file
+	c. Media, log, tex file
+
+4. Category/Types of the NoSQL?
+	There are 3 types
+	a. Key Value Store
+		Ex:	
+		1. Memcached
+		2. Coherence
+		3. Redis
+	b. Tabular
+		Ex:
+		1. BigTable - ex of google
+		2. HBase
+		3. Accumulo
+	c. Document Oriented
+		Ex:
+		1. MongoDB - Most popular one
+		2. CouchDB
+		3. Cloundant
+5. What is missing in NoSQL?
+	a. No joins support
+	b. No Complex Transaction support
+	c. No Constraints Support
+	d. Less Functionality
+
+6. Waht is available in NoSQL?
+	a. Query Language (Other than SQL). SQL not available but other language available to query
+	b. Fast Performance
+	c. Horizontal Scalability
+	d. High Performance
+
+7. When to Use NoSQL?
+	a. To store and retrieve great quantities of data then use NoSQL
+	b. Storing relationships between the elements is not important then use NoSQL
+	c. Delaing with grwoing lists of elements: Log, Blogs,  Twitter 
+	d. Prototypes or fast applications need to be developed then use NoSQL
+	e. Constraints and Validation logics are not required to be imlemented in DB then use NoSQL
+	f. The data is not structured or structure is changing with time then use NoSQL
+
+8. When NOT to use NoSQL?
+	a. Comlex Transactions - Do Not Use NOSQL. Ex: Banking transaction
+	b. Joins must be handled - Do not use NoSQL. 
+	c. Validations must be handled by DB then Do Not use NoSQL
+
+
+9. Types of NoSQL databases/NoSQL Datatypes/Storage Architecture (wiki + Other collections)
+
+There have been various approaches to classify NoSQL databases, each with different categories and subcategories. Because of the variety of approaches and overlaps it is difficult to get and maintain an overview of non-relational databases. Nevertheless, a basic classification is based on data model. A few examples in each category are:
+
+Note: There are close to 150+ NoSQL Databases available in the market, they are dividied into below 4 category
+	No SQL Database Types:
+	a. Document Data Store Databases (Document)
+		1. Data Model: Collection of Key value connections
+		2. Streangth: Incomplete Data Tolerant
+		3. Weakness: Query Performance, No Standard Query Syntax
+		4. Ex: MongoDB, Apache CouchDB, Clusterpoint, Couchbase, MarkLogic
+	b. Columnar NoSQL Databases (Column)
+		1. Data Model: Column Families
+		2. Strength: Fast Look-ups
+		3. Weakness: Very Low Level API
+		4. Ex: Cassandra, HBase, Accumulo, Druid, Vertica
+	c. Key Value Databases (Key-Value)
+		1. Data Model: Collection of Key value pairs
+		2. Streangth: Fast Look-ups
+		3. Weakness: Stored Data has no Schema
+		4. Ex: Redis, Amazon simple DB, Dynamo, FoundationDB, MemcacheDB, Riak, FairCom c-treeACE, Aerospike
+	d. Graph NoSQL Databases (Graph)
+		1. Data Model: "Property Graph" Nodes
+		2. Strength: Graph Algorithms - Shortest path, Connected ness, "Fastest Search using graph", etc
+		3. Weakness: Not easy to cluster, traverse whole graph to get answer, "Slowest read/write"
+		4. Ex: InfiniteGraph, InfoGrid, Allegro, Neo4J, OrientDB, Virtuoso, Stardog
+------------------
+
+10. Row oriented database is good for 
+	a. OLTP
+	b. Small number of Rows
+	c. Single row read/write
+
+11. Column oriented database is good for
+	a. OLAP
+	b. Aggregation over many rows/columns
+	c. High compression rates due to few distinct values
+
+---------------
+Youtube: https://www.youtube.com/watch?v=gJFG04Sy6NY
+This youtube video will explain how to choose a right NoSQL DB.
+
+1. NoSQL. 
+2. Elastic scale provided by Cassandra
+3. CAP Theoream? Three basic requirements exists in a special relation when designing applications for a distributed architecture
+	a. Consistency(C): Data in database remains consistent after execution of an operation. Ex: after an update operation all clients see the same data at the same 	time
+	b. Availability(A): This means that the system is always on (Service guarantee availability), no downtime
+	c. Partition Tolearance(P): Scalling the information and distribute data into multiple group and each partition communicate one another
+
+
+4. It is very difficult to fulfill all the 3 requirement. So currnet NoSQL database follows the different combinations (2 combinations out of 3 requirments)
+	CAP: (CA, CP, AP)
+	CA:	RDBMS
+	CP:	MongoDB, HBase, Redis. (MongoDB, HBase uses master, slave concept so the consistency is more)
+	AP:	CouchDB, Cassandra, DynomoDB, Riak. (No Master, slave concept. But Consistency is less compare to CP model. Ex: In Travel domain, ticket rate won't be 	cosnsitent until we book it. but Consistency is not a big issue until we book the ticket).
+
+	CA: Single site cluster, therefore all nodes are always in contact. When a partition occurs, the system blocks.
+	CP: Some data may not be accessiable, but the rest is still consistent/accurate
+	AP: System is still available under partitioning, but some of the data returned may be inaccurate.
+
+5. Writting data into database using casendra is totaly different compare to RDBMS. 
+	RDBMS follows 3 steps process to write: 
+		a. Seek first for a particular key
+		b. Do an update to that particular object
+		c. Write it back to Database
+
+	Cassendra follows 1 step process to write: (
+		a. It won't worry what is existing currently. Simply write data into DB. So writting speed is very fast 
+
+6. NoSQL DB is A BASE not ACID System
+	a) What is A BASE system
+	A BASE System gives up on consistency
+	Basically Available - Basicaly Available Indicates that the system "does guarantee availability", inters of the CAP Theorem
+	Soft State - Indicates that the state of the system "may change over time". This is becuase of the eventual consistency model
+	Eventual Consistency - Indicates the system "will become consistent over time"
+
+	b) What is ACID System (Not giving priority to this topic)
+	ACID (Atomicity, Consistency, Isolation, Durability) is a set of properties that guarantee that database transactions are processed reliably.
+
+
+7. Who uses Cassendra?
+	Facebook uses Cassandra, Graph, etc
+	Twitter uses Cassandra
+
+8. How to choose right NoSQL?
+	1. Right Data Model (Refer : "NoSQL - Reference.txt")
+	2. Pros & Cons of Consistency
+	3. Compromising Features of RDBMS
+
+9. Where to use Cassandra?
+	1. If looking for simple setup, Mainteanance and code
+	2. Very high veocity random reads & write
+	3. Flexible Spares/Wide column requirements
+	4. No multiple secondary index needs
+
+10. Where NOT to use Cassandra?
+	1. Secondary Indexes
+	2. Relational Data
+	3. Transaction (Rollback, Commit)
+	4. Primary & Financial Records
+	5. Stringent Security & Authorization needs on data
+	6. Dynamic queries on Columns
+	7. Searching Column Data
+	8. Low Latency
+
+11. Where to Use HBase?
+	1. Optimized for reads
+	2. Well suited for doing Range based scans
+	3. Applications with strict consistency requirements
+	4. Applications with fast read and writes with scalability
+		a. Facebook uses HBase to manage its user statuses, photos, chat messages etc
+
+
+12. Where NOT to use HBase?
+	1. It is not optimized for classic transactional applications or even relational analytics
+	2. Application that need
+		a. Full table scans
+		b. Data to be aggregated, rolled up, analysed across rows
+
+13. Where to use MongoDB?  -- Replacement for RDBMS
+	1. RDBMS replacement for Web Application (Closer to RDBMS)
+	2. Semi-structured content management
+	3. Real-time analystics & High speed logging
+	4. Caching & High scalability
+	5. Web 2.0, Media, SAAS, Gaming
+
+14. Who uses MongoDB & what are MongoDB Use Cases?
+	(High Performance and schema-free)
+
+	Craigslist uses MongoDB
+	a. MySQL for active posts
+	b. MongoDB for Archived posts
+	c. Migrated two billion plus posts to MongoDB
+
+	FoursSquare uses MongoDB
+	a. Migrated from RDBMS to MongoDB
+	b. Storage of Venues and check-in	
+	
+15. Where NOT to use MongoDB?
+	Highly Transactional Applications
+	Applications with Traditional database systems requirements such as foreign-key constraints, join, etc.
+
+
+16. Which is good DB?
+	HBase, MongoDB - Performance works well till a limited amount of data. Ex: Till 35 GB it works well and the performance will be slow after that
+	Cassandra - Performance works well without any limit. Thats why Facebook uses Cassandra
+
+17. 
+-
