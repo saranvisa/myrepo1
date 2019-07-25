@@ -1,0 +1,49 @@
+#####################  Web Reference  #####################
+## Hortonworks pig reference
+https://hortonworks.com/hadoop-tutorial/how-to-use-basic-pig-commands/
+
+## Hortonworks pig reference 1
+https://hortonworks.com/hadoop-tutorial/how-to-process-data-with-apache-pig/
+
+## Script from ITVersity
+https://github.com/dgadiraju/code/blob/master/hadoop/edw/hdp/pig/pig_demo.txt
+
+## Get all the available Pig functions from the right side button
+http://demo.gethue.com/hue/editor/?type=pig
+
+
+
+#####################  TIPS  #####################
+1. No services available in Cloudera Manager (something similar to sqoop)
+2. Running based on MapReduce
+3. We can use Yarn Resource Manager UI (8088) to  monitor Pig script
+4. 
+
+
+#####################  SIMPLE COMMANDS #####################
+1. > pig    	# To login
+2. > pig -help  # To get help without login to pig
+3. grunt> help	# To get help after login to pig
+4. grunt> quit  # To exit
+
+5. # Word count - line by line execution in CLI
+	a. keep a text file in hdfs
+	b. Load the text file into a variable. It works like a tuple
+		grunt> my_var = load '/user/saranvisa/pig_demp.txt';
+	c. To initiate/execute the above command and work as MapReduce behind the scene
+		grunt> dump my_var;
+		
+6. # work count - via single script		
+	a. create a script called wordcount.pig in linux local directory
+		my_var = load '/user/saranvisa/pig_demp.txt';
+		dump my_var;
+	b. login to pig and execute it
+		>pig
+		grunt> exec /home/saranvisa/wordcount.pig;
+	c. execute the pig script without login to pig
+		> pig -f /home/saranvisa/wordcount.pig
+		> pig -file /home/saranvisa/wordcount.pig
+	
+
+
+
