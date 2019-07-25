@@ -1,0 +1,26 @@
+[root@edhpen1203 single_asset]# pwd
+/home/hzc855/single_asset
+[root@edhpen1203 single_asset]# cat query.py
+
+from impala.dbapi import connect
+import thrift_sasl
+from impala.util import as_pandas
+
+conn = connect(host="edhpdn1207.kdc.capitalone.com", port=21050, auth_mechanism="GSSAPI")
+cursor = conn.cursor()
+
+cursor.execute('''select
+    *
+    from
+    phdp_bankcmrcl_portfoliotracker.pt_customer_rfnd a
+    inner join
+    bankcomrcl.hzc855_sip_reporting b
+    on
+    a.instnc_id = b.instnc_id
+    where a.customerid in ('901203261354')
+    ;''')
+
+query_result = as_pandas(cursor)
+print(query_result)
+print('done')
+[root@edhpen1203 single_asset]#
