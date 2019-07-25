@@ -1,0 +1,168 @@
+#Go to gateway node
+
+# To check the status of Oozie
+>oozie admin -oozie http://ip_where_oozie_installed:11000/oozie -status
+
+
+# To check the Version of Oozie
+>oozie admin -oozie http://ip_where_oozie_installed:11000/oozie -version
+
+Oozie Server build version : 4.0.0-cdh5.2.1
+
+---------------------
+# sample Oozie folder structure
+# 'src', 'apps', 'inputdata' folders, in wchich apps uses inputdata folder to process jobs
+# main directory is apps. it has multiple sub folders represents the Oozie supported systems (Ex: hive, pig, shell, streaming, cron, etc)
+# So Oozie is not only supporting hadoop echo system like (hive, pig), it also supports non-hadoop eco systems (like sheel, cron, etc)
+
+
+# Admin has to validate some of them before deliver to deliver
+# Ex: go to folder map-reduce. 
+
+-------------- workflow.xml
+# workflow.xml:   This is the main DAG, it controls the workflow
+# All the below information will be given by developer
+# Workflow is used to handle any type of applications like Yarn/MapReduce, Pig, hive, sqoop
+# Common steps in Workflow: source data -> load into hadoop -> ETL on top of it -> After ETL, report the data back to reporting layer -> 
+# Ex: The below example shows we need at least 3 actions. It will be co-ordinated via oozie
+# Step1/Action1: might use sqoop job to get data from source to Hadoop
+# Step2/Action2: Use etl for some actions
+# Step3/Action3: After ETL Copy data to Reporting layer
+
+# The below workflow is sample for serial 
+# You can also do parallel , then apply join logic to join both the datasets
+<workflow-app xmlns="url:oozie:workflow:0.2" name ="map-reduce-wf">
+<start to ="mr-node">
+# In this example, only one action is given for one workflow, but in production, there would be multiple actions with same/different workflows
+<action name=mr-node>    # This is the important tag, talks about the action
+<map-reduce>		 # Type of workflow
+<job-tracker>${JobTracker}</job-tracker>   # JobTracker will be used from job.properties. Also we can hardcode, but it is not recommanded
+<name-node>${namenode}</name-node>
+<prepare>
+	# examplesRoot will be used from job.properties. Also we can hardcode, but it is not recommanded
+	<delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-date/${outputDir}"
+	<prepare>
+	<configuration>
+	<property>
+	<name>mapre.job.queue.name</name>
+	<value>${queueName}</value>
+	</property>
+	<property>
+	<name>mapred.mapper.class</name>
+	<value>org.apache.oozie.example.SampleMapper</value>
+	</property> 
+	<name>mapred.output.value.class</name>
+	<value>org.apache.hadoop.io.NullWritable</value>
+	</property> 
+	<property>
+	<name>mapred.map.tasks</name>
+	<value>1</value>
+	</property> 
+	<property>
+	<name>mapred.input.dir</name>
+	<value>/user/${wf:user()}/lca/input</value>
+	</property> 
+	<property>
+	<name>mapred.output.dir</name>
+	<value>/user/${wf:user()}/${exampleRoot/output-data/${OutputDir}}</value>
+	</property> 
+	</Configuration>
+	</map-reduce>
+	<ok to='pig-node'>
+	<error to='fail'>
+</action>
+# In case of Pig, workflow.xml, you will see action name=pig-node
+<action name='pig-node'>	
+	<pig>
+	<job-tracker>${JobTracker}</job-tracker>
+	<name-node>${namenode}</name-node>
+	<prepare>
+	<delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-date/${outputDir}"
+	<prepare>
+	<configuration>
+	<property>
+..........................	
+	</pig>
+	<ok to='end'>
+	<error to='fail'>
+...............
+	<kill name='fail'>
+	   <message>MapReduce failed, error message [${wf:errormessage(wf:lasterrornode())}]
+	</kill>
+	<end name='end'/>
+</workflow-app>
+
+
+ # In case of Hive, workflow.xml, you will see action name=Hive-node
+			
+
+
+------------ Update Job.properties
+# Job.properties: if you have some property which can be used in multiple jobs then use job.properties, so that you can reuse the property
+
+>vi job.properties  # Do the below changes
+# job.properties has the following info
+# In production, we have to use actual ip address instead of localhost
+# *Note: If you have High Availability Enabled then use hdfs://service_ID instead of IP Address (no port mentioned)
+namenode=hdfs://localhost:8020  -- Default value with port 8020
+# *Note: if you are using Yarn Resource Manager then use jobtracker=hostname_where_u_hv_RM:8032 and port 8032
+jobtracker=localhost:8021 -- Default value with port 8021. 8021 is for classic and 8032 is for YARN
+queuename=default
+examplesRoot=examples  # This is the parameter used in below oozie command. Replace 'examples' with proper path
+
+# below parameter is hdfs directory
+oozie.wf.applicatin.path=${namenode}/user/${user.name}/${examplesRoot}/apps/map-reduce/workflow.xml   # Uses 'examplesRoot' as parameter from above
+outputDir=map-reduce
+------------
+# lib: has the jar file which needs to be executed. oozie-examples-4.0.0-cdh5.2.1.jar
+-----------
+#How to run the jar file?
+# Run the below command. If it shows error 'jar not found' then run the next two commands
+>jar tvf lib/oozie-examples-4.0.0-cdh5.2.1.jar
+
+# The below command shows the jar existence in your system. Once you confirmed
+> /usr/java/jdk1.7.0_67-coudera/bin/jar
+
+# Run the below command from map-reduce directory. It shows all the classes for the 'src' directory
+map-reduce>/usr/java/jdk1.7.0_67-coudera/bin/jar  -tvf lib/oozie-examples-4.0.0-cdh5.2.1.jar
+
+#what is tvf in linux?
+
+----------------Once you make all the changes in local, move it to hdfs
+>hadoop fs -put examples /user/hduser
+
+---------------- Valiedate job.properties (oozie.wf.applicatin.path)
+oozie.wf.applicatin.path=${namenode}/user/${user.name}/${examplesRoot}/apps/map-reduce/workflow.xml   
+>hadoop fs -ls /user/hduser/examples/apps/map-reduce/workflow.xml
+
+
+---------------- Run Oozie job
+#Note: Now we are running Oozie from the OS commandline, so it won't understand hdfs path, so give local path where job.property available
+>oozie job -oozie  http://ip_where_Oozie_is_installed:11000/oozie  -config  /home/hduser/demo/oozie/examples/apps/mapreduce/job.properties -run
+
+# it will give the oozie_job-id
+---------------- Validate Oozie Job
+>oozie job -oozie  http://ip_where_Oozie_is_installed:11000/oozie  -info  oozie_job_id
+
+---------------- Monitor using Resource Manager UI
+http://RMinstalledhost:8088
+
+# Get Output directory from WUI -> Configuration -> search (outputdir)
+
+hdfs://nameservice1/user/hduser/emamples/output-data/map-reduce
+
+>hadoop fs -ls hdfs://nameservice1/user/hduser/emamples/output-data/map-reduce
+>hadoop fs -cat hdfs://nameservice1/user/hduser/emamples/output-data/map-reduce/part*
+
+
+
+
+
+
+
+
+
+
+
+
+
